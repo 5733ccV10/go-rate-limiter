@@ -14,6 +14,11 @@ type RateLimitResponse struct {
 	RetryAfterMS uint64
 }
 
+const (
+	ErrorCodeInvalidPayload         uint8 = 1
+	ErrorCodeUnsupportedMessageType uint8 = 2
+)
+
 type ErrorResponse struct {
 	Code    uint8
 	Message string

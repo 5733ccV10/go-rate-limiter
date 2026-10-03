@@ -3,13 +3,14 @@ package protocol
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 )
 
 func DecodeFrame(reader io.Reader) (Frame, error) {
 	lengthInBytes := make([]byte, LengthPrefixSize)
 	if _, err := io.ReadFull(reader, lengthInBytes); err != nil {
-		return Frame{}, errors.New("something went wrong while calculating the length of the payload")
+		return Frame{}, fmt.Errorf("read frame length: %w", err)
 	}
 
 	bodyLength := binary.BigEndian.Uint32(lengthInBytes)
@@ -22,7 +23,10 @@ func DecodeFrame(reader io.Reader) (Frame, error) {
 
 	bodyBytes := make([]byte, int(bodyLength))
 	if _, err := io.ReadFull(reader, bodyBytes); err != nil {
-		return Frame{}, errors.New("something went wrong while extracting the payload bytes")
+		if errors.Is(err, io.EOF) {
+			err = io.ErrUnexpectedEOF
+		}
+		return Frame{}, fmt.Errorf("read frame body: %w", err)
 	}
 
 	offset := 0
